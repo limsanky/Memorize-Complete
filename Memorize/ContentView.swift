@@ -8,73 +8,53 @@
 import SwiftUI
 
 struct ContentView: View {
-    let themes = [
-        ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "🥲", "☺️", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪"],
-        ["👋", "🤚", "🖐", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉"],
-        ["🚂", "✈️", "🚗", "🚓", "🚡", "🚚", "🚎", "🚑", "⛵️",
-                          "🚇", "🛵", "🛬", "🛫", "🛺", "🛰"]
-    ]
-    
-    @State var themeIndex = 0
-    @State var emojiCount = 8
+    let emojis = ["🚂", "✈️", "🚗", "🚓", "🚡", "🚚", "🚎", "🚑", "⛵️",
+                      "🚇", "🛵", "🛬", "🛫", "🛺", "🛰"]
+    @State var emojiCount = 4
     
     var body: some View {
         VStack {
-            Text("Memorize!")
-                .font(.largeTitle)
-            
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70))]) {
-                    let theme = themes[themeIndex].shuffled()
-                    
-                    ForEach (theme[0..<emojiCount], id: \.self) { emoji in
+                    ForEach (emojis[0..<emojiCount], id: \.self) { emoji in
                         CardView(content: emoji)
                             .aspectRatio(2/3, contentMode: .fit)
                     }
                 }
             }
             .foregroundColor(.red)
-          
+            
             Spacer()
             
             HStack {
-                vehiclesTheme
-                facesTheme
-                handsTheme
+                removeButton
+                Spacer()
+                addButton
             }
+            .font(.largeTitle)
+            .padding(.vertical)
         }
         .padding(.horizontal)
     }
     
-    func setRandomInteger(in theme: Int) {
-        emojiCount = Int.random(in: 4..<theme)
-    }
-    
-    var vehiclesTheme: some View {
-        returnThemeLabel(of: "Vehicles", index: 2, image: "car")
-    }
-    
-    var facesTheme: some View {
-        returnThemeLabel(of: "Faces", index: 0, image: "face.smiling")
-    }
-    
-    var handsTheme: some View {
-        returnThemeLabel(of: "Hands", index: 1, image: "hand.raised")
-    }
-    
-    func returnThemeLabel(of: String, index: Int, image: String) -> some View {
+    var removeButton: some View {
         Button {
-            themeIndex = index
-            setRandomInteger(in: themes[themeIndex].count)
-        } label: {
-            VStack {
-                Image(systemName: image)
-                    .font(.largeTitle)
-                Text(of)
-                    .font(.subheadline)
+            if emojiCount > 1 {
+                emojiCount -= 1
             }
+        } label: {
+            Image(systemName: "minus.circle")
         }
-        .padding(.horizontal)
+    }
+    
+    var addButton: some View {
+        Button {
+            if emojiCount < emojis.count {
+                emojiCount += 1
+            }
+        } label: {
+            Image(systemName: "plus.circle")
+        }
     }
 }
 
@@ -85,6 +65,7 @@ struct CardView: View {
     var body: some View {
         ZStack {
             let shape = RoundedRectangle (cornerRadius: 20)
+            
             if isFaceUp {
                 shape.fill().foregroundColor(.white)
                 shape.strokeBorder(lineWidth: 3)
