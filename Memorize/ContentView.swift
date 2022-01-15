@@ -8,99 +8,85 @@
 import SwiftUI
 
 struct ContentView: View {
-    let themes = [
-        ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "🥲", "☺️", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪"],
-        ["👋", "🤚", "🖐", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉"],
-        ["🚂", "✈️", "🚗", "🚓", "🚡", "🚚", "🚎", "🚑", "⛵️",
-                          "🚇", "🛵", "🛬", "🛫", "🛺", "🛰"]
-    ]
     
-    @State var themeIndex = 0
-    @State var emojiCount = 8
-    
+    @ObservedObject var viewModel: EmojiMemoryGame
+
     var body: some View {
         VStack {
-            Text("Memorize!")
-                .font(.largeTitle)
+            nameOfTheme
+                .font(.system(.title))
             
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70))]) {
-                    let theme = themes[themeIndex].shuffled()
-                    
-                    ForEach (theme[0..<emojiCount], id: \.self) { emoji in
-                        CardView(content: emoji)
+                    ForEach (viewModel.model.cards) { card in
+                        CardView(card: card)
                             .aspectRatio(2/3, contentMode: .fit)
+                            .onTapGesture { viewModel.choose(card) }
                     }
                 }
+                .foregroundColor(colorScheme)
             }
-            .foregroundColor(.red)
-          
+            
             Spacer()
             
-            HStack {
-                vehiclesTheme
-                facesTheme
-                handsTheme
-            }
-        }
-        .padding(.horizontal)
-    }
-    
-    func setRandomInteger(in theme: Int) {
-        emojiCount = Int.random(in: 4..<theme)
-    }
-    
-    var vehiclesTheme: some View {
-        returnThemeLabel(of: "Vehicles", index: 2, image: "car")
-    }
-    
-    var facesTheme: some View {
-        returnThemeLabel(of: "Faces", index: 0, image: "face.smiling")
-    }
-    
-    var handsTheme: some View {
-        returnThemeLabel(of: "Hands", index: 1, image: "hand.raised")
-    }
-    
-    func returnThemeLabel(of: String, index: Int, image: String) -> some View {
-        Button {
-            themeIndex = index
-            setRandomInteger(in: themes[themeIndex].count)
-        } label: {
             VStack {
-                Image(systemName: image)
-                    .font(.largeTitle)
-                Text(of)
-                    .font(.subheadline)
+                score
+                newGameButton
+                    .foregroundColor(.blue)
             }
+            .font(.system(.title2))
         }
         .padding(.horizontal)
+    }
+    
+    var score: some View {
+        let score = viewModel.model.score
+        return Text("\(score)")
+            .padding()
+            .foregroundColor(score == 0 ? .blue : score < 0 ? .red : .green)
+    }
+    
+    var nameOfTheme: some View {
+        Text(viewModel.themeName)
+    }
+    
+    var colorScheme: Color {
+        viewModel.getColorScheme()
+    }
+    
+    var newGameButton: some View {
+        Button {
+            viewModel.startGame()
+        } label: {
+            Text("New Game")
+        }
     }
 }
 
 struct CardView: View {
-    let content: String
-    @State var isFaceUp: Bool = true
+    let card: MemoryGame<String>.Card
     
     var body: some View {
         ZStack {
             let shape = RoundedRectangle (cornerRadius: 20)
-            if isFaceUp {
+
+            if card.isFaceUp {
                 shape.fill().foregroundColor(.white)
                 shape.strokeBorder(lineWidth: 3)
-                Text(content).font(.largeTitle)
+                Text(card.content).font(.largeTitle)
+            } else if card.isMatched {
+                shape.opacity(0)
             } else {
                 shape.fill()
+                Text(card.content).font(.title)
             }
-        }
-        .onTapGesture {
-            isFaceUp = !isFaceUp
         }
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView(viewModel: EmojiMemoryGame())
+            .preferredColorScheme(.dark)
     }
 }
