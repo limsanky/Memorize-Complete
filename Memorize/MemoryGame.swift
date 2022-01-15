@@ -11,30 +11,7 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     private(set) var cards: [Card]
     
     private var indexOfTheOneAndOnlyFaceUpCard: Int?
-    
-    mutating func choose(_ card: Card) {
-        if let chosenIndex = cards.firstIndex(where: { $0.id == card.id }),
-            !cards[chosenIndex].isFaceUp,
-            !cards[chosenIndex].isMatched
-        {
-            if let potentialMatchIndex = indexOfTheOneAndOnlyFaceUpCard {
-                if cards[chosenIndex].content == cards[potentialMatchIndex].content {
-                    cards[chosenIndex].isMatched = true
-                    cards[potentialMatchIndex].isMatched = true
-                }
-                
-                indexOfTheOneAndOnlyFaceUpCard = nil
-            } else {
-                for index in cards.indices {
-                    cards[index].isFaceUp = false
-                }
-                
-                indexOfTheOneAndOnlyFaceUpCard = chosenIndex
-            }
-            
-            cards[chosenIndex].isFaceUp.toggle()
-        }
-    }
+    private(set) var score = 0
     
     func index(of card: Card) -> Int? {
         for index in 0..<cards.count {
@@ -62,5 +39,48 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
         var isMatched = false
         let content: CardContent
         let id: Int
+        
+        var isSeen = false
     }
+    
+    // MARK: - Intents
+    
+    mutating func choose(_ card: Card) {
+        if let chosenIndex = cards.firstIndex(where: { $0.id == card.id }),
+            !cards[chosenIndex].isFaceUp,
+            !cards[chosenIndex].isMatched
+        {
+            if let potentialMatchIndex = indexOfTheOneAndOnlyFaceUpCard {
+                if cards[chosenIndex].content == cards[potentialMatchIndex].content {
+                    cards[chosenIndex].isMatched = true
+                    cards[potentialMatchIndex].isMatched = true
+                    
+                    score += 2
+                } else {
+                    if cards[chosenIndex].isSeen {
+                        score -= 1
+                    }
+                    
+                    if cards[potentialMatchIndex].isSeen {
+                        score -= 1
+                    }
+                    
+                    cards[potentialMatchIndex].isSeen = true
+                    cards[chosenIndex].isSeen = true
+                }
+                
+                indexOfTheOneAndOnlyFaceUpCard = nil
+            } else {
+                for index in cards.indices {
+                    cards[index].isFaceUp = false
+                }
+                
+                indexOfTheOneAndOnlyFaceUpCard = chosenIndex
+            }
+            
+            cards[chosenIndex].isFaceUp.toggle()
+        }
+    }
+    
+    mutating func shuffle() { cards.shuffle() }
 }
